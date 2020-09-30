@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using EscapeRoom.SignalR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -26,20 +27,21 @@ namespace EscapeRoom
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            
             services.AddCors(options =>
             {
                 options.AddPolicy("Dev Policy", opt =>
                 {
                     opt.AllowAnyHeader();
                     opt.AllowAnyMethod();
-                    opt.WithOrigins("http://localhost:3000");
+                    opt.WithOrigins();
                     opt.AllowCredentials();
-;                });
+                });
             });
             
             
             services.AddControllers();
-            services.AddSignalR();
+            services.AddSignalR(c => c.EnableDetailedErrors = true);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -49,8 +51,16 @@ namespace EscapeRoom
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+
             app.UseCors("Dev Policy");
             app.UseHttpsRedirection();
+            
 
             app.UseRouting();
 
